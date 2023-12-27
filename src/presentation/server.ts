@@ -29,7 +29,7 @@ export class Server{
         });
 
         this.app.listen(this.port, ()=>{
-            console.log('Server Running');
+            console.log('Server Running'+ this.port);
         });
     }
 
