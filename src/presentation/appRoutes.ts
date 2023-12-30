@@ -2,7 +2,7 @@ import {Router} from "express";
 import {TodoRoutes} from "./todo/route";
 
 
-export class Routes {
+export class AppRoutes {
 
     static get routes(): Router {
         const router = Router();

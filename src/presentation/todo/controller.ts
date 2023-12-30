@@ -1,27 +1,32 @@
 import {Request, Response} from "express";
+import {prisma} from "../../data/postgres";
+import {CreateTodoDto} from "../../domain/dtos";
+import {UpdateTodoDto} from "../../domain/dtos/todos/updateTodo.dto";
 
-const todos = [
+/*const todos = [
     {id: 1, text: 'Buy Milk', completedAt: new Date()},
     {id: 2, text: 'Buy Bread', completedAt: null},
     {id: 3, text: 'Buy Honey', completedAt: new Date()},
-];
+];*/
 export class TodoController {
     constructor() {
     }
 
-    public getTodo = (req: Request, res: Response)=>{
+    public getTodo = async (req: Request, res: Response)=>{
+        const todos = await prisma.todo.findMany();
         res.json(todos);
     }
 
-    public getTodoById = (req: Request, res: Response)=>{
+    public getTodoById = async (req: Request, res: Response)=>{
         const id = +req.params.id;
 
         if(isNaN(id)) {
-            res.status(400).json({error: `Param is not number`});
-            return;
+            return res.status(400).json({error: `Param is not number`});
         }
 
-        const todo  = todos.find((register)=> register.id === id);
+        const todo = await prisma.todo.findFirst({
+            where: {id: id},
+        });
 
         (todo)
             ?res.json({todo})
@@ -29,23 +34,37 @@ export class TodoController {
 
     }
 
-    public createTodo = (req: Request, res: Response) =>{
-        const body = req.body;
-        const { text }=body;
-        if(!text) return res.status(400).json({error: 'Text property is required'});
+    public createTodo = async (req: Request, res: Response) =>{
+        const [error,createTodoDto] = CreateTodoDto.create(req.body)
 
-        const newTodo = {
-            id: todos.length +1,
-            text,
-            completedAt: null
-        }
+        if(error) return res.status(400).json({error});
 
-        todos.push(newTodo);
+        const todo = await prisma.todo.create({
+            data: createTodoDto!
+        });
 
-        res.json({todo:newTodo});
+        res.json({todo});
     }
 
-    public updateTodo = (req: Request, res: Response) =>{
+    public updateTodo = async (req: Request, res: Response) =>{
+        const id = +req.params.id;
+        const [error, updateTodoDto] = UpdateTodoDto.create({...req.body, id});
+
+        if(error) return res.status(404).json({error});
+
+        try {
+            const todo = await prisma.todo.update({
+                where: {id: id},
+                data: updateTodoDto!.values
+            });
+            res.json({todo});
+        }catch (e) {
+            return res.status(404).json({error: `TODO with id ${id} not found`});
+        }
+
+    }
+
+    public deleteTodo = async (req: Request, res: Response) =>{
         const id = +req.params.id;
 
         if(isNaN(id)) {
@@ -53,37 +72,15 @@ export class TodoController {
             return;
         }
 
-        const todo  = todos.find((register)=> register.id === id);
+        try {
+            const todo  = await prisma.todo.delete({
+                where:{id:id}
+            });
 
-        if(!todo) return res.status(404).json({error: `TODO with id ${id} not found`});
-
-        const {text, completedAt} = req.body;
-
-        todo.text = text||todo.text;
-        (completedAt === 'null')
-            ? todo.completedAt = null
-            : todo.completedAt = new Date(completedAt || todo.completedAt);
-
-        //! OJO, se pasa por referencia
-
-        res.json({todo});
-
-    }
-
-    public deleteTodo = (req: Request, res: Response) =>{
-        const id = +req.params.id;
-
-        if(isNaN(id)) {
-            res.status(400).json({error: `Param is not number`});
-            return;
+            res.json({todo});
+        }catch (e) {
+            return res.status(404).json({error: `TODO with id ${id} not found`});
         }
 
-        const todo  = todos.find((register)=> register.id === id);
-
-        if(!todo) return res.status(404).json({error: `TODO with id ${id} not found`});
-
-        todos.splice(todos.indexOf(todo), 1)
-
-        res.json({todo});
     }
 }
