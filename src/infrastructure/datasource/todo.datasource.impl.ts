@@ -1,6 +1,7 @@
 import {CreateTodoDto, TodoDatasource, TodoEntity} from "../../domain";
-import {UpdateTodoDto} from "../../domain/dtos/todos/updateTodo.dto";
+import {UpdateTodoDto} from "../../domain";
 import {prisma} from "../../data/postgres";
+import {CustomError} from "../../domain";
 
 
 export class TodoDatasourceImpl implements TodoDatasource {
@@ -22,7 +23,7 @@ export class TodoDatasourceImpl implements TodoDatasource {
             where: {id: id},
         });
 
-        if (!todo) throw `Todo with id ${ id } not found`;
+        if (!todo) throw new CustomError(`Todo with id ${ id } not found`, 404);
 
         return TodoEntity.fromJson(todo);
     }
@@ -36,7 +37,7 @@ export class TodoDatasourceImpl implements TodoDatasource {
 
             return TodoEntity.fromJson(todo);
         }catch (e) {
-            throw `Id ${ updateTodoDto.id } not found`;
+            throw new CustomError(`Id ${ updateTodoDto.id } not found`, 404);
         }
     }
 
@@ -48,7 +49,7 @@ export class TodoDatasourceImpl implements TodoDatasource {
 
             return TodoEntity.fromJson(todo);
         }catch (e) {
-            throw `Id ${ id } not found`;
+            throw new CustomError(`Id ${ id } not found`, 404);
         }
     }
 }

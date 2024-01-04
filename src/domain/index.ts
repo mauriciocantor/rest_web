@@ -9,3 +9,5 @@ export * from './useCases/todo/updateTodo';
 export * from './useCases/todo/getTodo';
 export * from './useCases/todo/getAllTodos';
 export * from './useCases/todo/deleteTodo';
+
+export * from './errors/custom.error';

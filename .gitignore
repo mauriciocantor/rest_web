@@ -1,6 +1,7 @@
 .env
 .idea/
 /postgres
+/postgres_test
 dist/
 
 # Created by https://www.toptal.com/developers/gitignore/api/node,webstorm
